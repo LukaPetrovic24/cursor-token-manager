@@ -17,6 +17,7 @@
     "postinstall": "electron-builder install-app-deps",
     "electron:dev": "tsc -p electron && node copy-preload.js && concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "tsc -p electron && node copy-preload.js && vite build && electron-builder",
+    "electron:publish": "tsc -p electron && node copy-preload.js && vite build && electron-builder --publish always",
     "electron:compile": "tsc -p electron && node copy-preload.js"
   },
   "dependencies": {
