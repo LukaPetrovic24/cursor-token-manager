@@ -2,71 +2,28 @@
 
 一个美观的Mac风格桌面应用，用于管理Cursor编辑器的Token账号。
 
-## 功能特性
+## 功能预览
 
-- 🎨 **Mac风格UI** - 仿Mac系统设计，毛玻璃效果，流畅动画
-- 🔑 **Token管理** - 添加、编辑、删除多个Token账号
-- ⚡ **快速切换** - 一键切换当前使用的Token
-- 💾 **数据持久化** - 自动保存所有Token信息
-- 🪟 **无边框窗口** - 自定义标题栏，完美Mac体验
+### 🏠 主页 (Home)
+简洁直观的仪表盘，快速概览系统状态。
+![主页](img/zhuye.png)
 
-## 技术栈
+### 👥 账号管理 (Account Management)
+轻松添加、编辑和删除Cursor Token账号，支持一键切换当前使用的账号。
+![账号管理](img/zhanghaoguanli.png)
 
-- **Electron** - 桌面应用框架
-- **React** - UI框架
-- **TypeScript** - 类型安全
-- **Vite** - 快速构建工具
-- **electron-store** - 数据持久化
+### ⚙️ 系统管理 (System Management)
+管理系统配置，监控应用运行状态。
+![系统管理](img/xitongguanli.png)
 
-## 开发
+### 🔧 设置 (Settings)
+个性化应用设置，调整界面偏好。
+![设置](img/shezhi.png)
 
-### 安装依赖
-
-```bash
-npm install
-```
-
-### 启动开发模式
-
-```bash
-npm run electron:dev
-```
-
-这将同时启动Vite开发服务器和Electron应用。
-
-### 构建应用
-
-```bash
-npm run electron:build
-```
-
-构建完成后，可执行文件将在 `release` 目录中。
-
-## 使用说明
-
-1. 启动应用后，点击"添加新Token"按钮
-2. 输入账号名称（例如：工作账号、个人账号）
-3. 粘贴你的Cursor Token
-4. 选择是否设为当前使用的Token
-5. 保存后可以在列表中管理所有Token
-6. 点击"设为当前"可以快速切换Token
-
-## 项目结构
-
-```
-.
-├── electron/          # Electron主进程代码
-│   ├── main.ts       # 主进程入口
-│   └── preload.ts    # 预加载脚本
-├── src/              # React应用代码
-│   ├── components/   # React组件
-│   ├── styles/       # 样式文件
-│   └── App.tsx       # 主应用组件
-└── package.json      # 项目配置
-```
+### ❓ 常见问题 (FAQ)
+内置常见问题解答，帮助快速解决使用困惑。
+![常见问题](img/changjianwenti.png)
 
 ## 许可证
 
 MIT
-
-
