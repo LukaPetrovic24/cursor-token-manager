@@ -47,7 +47,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libicns-utils graphicsmagick xz-utils rpm libarchive-tools
+          sudo apt-get install -y build-essential icnsutils graphicsmagick xz-utils rpm libarchive-tools
 
       - name: Install Dependencies
         run: npm install
