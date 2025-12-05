@@ -12,8 +12,8 @@ interface Window {
     minimizeWindow: () => Promise<void>
     maximizeWindow: () => Promise<void>
     closeWindow: () => Promise<void>
-    getSettings: () => Promise<{ cursorDbPath?: string; cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean; autoRefreshInterval?: number; autoRefreshEnabled?: boolean }>
-    saveSettings: (settings: { cursorDbPath?: string; cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean; autoRefreshInterval?: number; autoRefreshEnabled?: boolean }) => Promise<{ success: boolean }>
+    getSettings: () => Promise<{ cursorDbPath?: string; cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean; showSwitchProgress?: boolean; autoRefreshInterval?: number; autoRefreshEnabled?: boolean }>
+    saveSettings: (settings: { cursorDbPath?: string; cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean; showSwitchProgress?: boolean; autoRefreshInterval?: number; autoRefreshEnabled?: boolean }) => Promise<{ success: boolean }>
     pickCursorAppPath: () => Promise<{ success: boolean; path?: string; error?: string }>
     scanCursorPaths: () => Promise<{ success: boolean; cursorAppPath?: string; cursorDbPath?: string; scannedPaths?: string[]; foundPaths?: string[]; error?: string }>
     syncCursorAccount: () => Promise<{ success: boolean; message?: string; error?: string; account?: { email: string; id: string } }>
@@ -22,5 +22,14 @@ interface Window {
     resetMachineId: () => Promise<{ success: boolean; error?: string; newIds?: any }>
     clearHistory: () => Promise<{ success: boolean; error?: string }>
     onSwitchAccountProgress: (callback: (data: { step: string; progress: number; message: string }) => void) => () => void
+    checkForUpdates: () => Promise<{ success: boolean; hasUpdate?: boolean; currentVersion?: string; latestVersion?: string; releaseUrl?: string; releaseNotes?: string; publishedAt?: string; error?: string; manualDownload?: boolean }>
+    downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+    installUpdate: () => Promise<{ success: boolean; error?: string }>
+    onUpdateChecking: (callback: () => void) => () => void
+    onUpdateAvailable: (callback: (info: any) => void) => () => void
+    onUpdateNotAvailable: (callback: (info: any) => void) => () => void
+    onUpdateDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; total: number; transferred: number }) => void) => () => void
+    onUpdateDownloaded: (callback: (info: any) => void) => () => void
+    onUpdateError: (callback: (error: string) => void) => () => void
   }
 }

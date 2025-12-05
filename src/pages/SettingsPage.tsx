@@ -8,9 +8,10 @@ interface SettingsPageProps {
     batchRefreshSize?: number
     switchResetMachineId?: boolean
     switchClearHistory?: boolean
+    showSwitchProgress?: boolean
   }
   tokensCount?: number
-  onSave: (settings: { cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean }) => void
+  onSave: (settings: { cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean; showSwitchProgress?: boolean }) => void
 }
 
 const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -22,6 +23,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   const [batchRefreshSize, setBatchRefreshSize] = useState(settings.batchRefreshSize || 5)
   const [switchResetMachineId, setSwitchResetMachineId] = useState(settings.switchResetMachineId !== undefined ? settings.switchResetMachineId : true)
   const [switchClearHistory, setSwitchClearHistory] = useState(settings.switchClearHistory || false)
+  const [showSwitchProgress, setShowSwitchProgress] = useState(settings.showSwitchProgress !== undefined ? settings.showSwitchProgress : true)
   
   const [isScanning, setIsScanning] = useState(false)
   const [scanResult, setScanResult] = useState<{
@@ -46,6 +48,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     setBatchRefreshSize(settings.batchRefreshSize || 5)
     setSwitchResetMachineId(settings.switchResetMachineId !== undefined ? settings.switchResetMachineId : true)
     setSwitchClearHistory(settings.switchClearHistory || false)
+    setShowSwitchProgress(settings.showSwitchProgress !== undefined ? settings.showSwitchProgress : true)
   }, [settings])
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,7 +57,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       cursorAppPath: cursorAppPath.trim(),
       batchRefreshSize: batchRefreshSize,
       switchResetMachineId: switchResetMachineId,
-      switchClearHistory: switchClearHistory
+      switchClearHistory: switchClearHistory,
+      showSwitchProgress: showSwitchProgress
     })
   }
 
@@ -349,6 +353,21 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   <span className="checkbox-text">
                     <span className="checkbox-title">切换时清理历史会话</span>
                     <span className="checkbox-desc">清除所有聊天历史和工作区存储（谨慎使用）</span>
+                  </span>
+                </label>
+              </div>
+              
+              <div className="checkbox-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={showSwitchProgress}
+                    onChange={(e) => setShowSwitchProgress(e.target.checked)}
+                    className="checkbox-input"
+                  />
+                  <span className="checkbox-text">
+                    <span className="checkbox-title">显示切换进度窗口</span>
+                    <span className="checkbox-desc">切换账号时显示操作进度（推荐保持开启）</span>
                   </span>
                 </label>
               </div>

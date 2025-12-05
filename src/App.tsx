@@ -10,6 +10,7 @@ import TokenFormModal from './components/TokenFormModal'
 import Dialog from './components/Dialog'
 import ProgressModal from './components/ProgressModal'
 import RefreshLogModal from './components/RefreshLogModal'
+import UpdateNotification from './components/UpdateNotification'
 import './styles/App.css'
 
 export interface Token {
@@ -82,16 +83,21 @@ function App() {
     cursorAppPath: '',
     batchRefreshSize: 5,
     switchResetMachineId: true,
-    switchClearHistory: false
+    switchClearHistory: false,
+    showSwitchProgress: true // 是否显示切换账号进度窗口
   })
 
   // 更新检测状态
   const [updateInfo, setUpdateInfo] = useState<{
+    show: boolean
     hasUpdate: boolean
+    currentVersion?: string
     latestVersion?: string
     releaseUrl?: string
     releaseNotes?: string
+    manualDownload?: boolean
   }>({
+    show: false,
     hasUpdate: false
   })
   
@@ -118,8 +124,11 @@ function App() {
       
       // 注册进度监听
       const cleanup = window.electronAPI.onSwitchAccountProgress((data) => {
+        // 读取当前设置，决定是否显示进度窗口
+        const currentSettings = JSON.parse(localStorage.getItem('appSettings') || '{"showSwitchProgress": true}')
+        
         setProgressModal({
-          show: true,
+          show: currentSettings.showSwitchProgress !== false, // 默认显示
           step: data.step,
           progress: data.progress,
           message: data.message
@@ -140,6 +149,28 @@ function App() {
         }
       })
 
+      // 注册更新事件监听
+      const cleanupUpdateAvailable = window.electronAPI.onUpdateAvailable?.((info) => {
+        console.log('发现新版本:', info)
+        setUpdateInfo({
+          show: true,
+          hasUpdate: true,
+          currentVersion: info.currentVersion,
+          latestVersion: `v${info.version}`,
+          releaseUrl: `https://github.com/Denny-Yuan/cursor-token-manager/releases/tag/v${info.version}`,
+          releaseNotes: info.releaseNotes || '',
+          manualDownload: false
+        })
+      })
+
+      const cleanupUpdateNotAvailable = window.electronAPI.onUpdateNotAvailable?.(() => {
+        console.log('已是最新版本')
+      })
+
+      const cleanupUpdateError = window.electronAPI.onUpdateError?.((error) => {
+        console.error('更新检查失败:', error)
+      })
+
       loadTokens().then(() => {
         // 加载完列表后，自动执行一次静默同步
         handleSyncAccount(false)
@@ -151,6 +182,9 @@ function App() {
       
       return () => {
         cleanup && cleanup()
+        cleanupUpdateAvailable?.()
+        cleanupUpdateNotAvailable?.()
+        cleanupUpdateError?.()
       }
     } else {
       console.error('electronAPI 未加载！请检查 preload 脚本是否正确加载。')
@@ -223,13 +257,17 @@ function App() {
       if (window.electronAPI) {
         const data = await window.electronAPI.getSettings()
         // 只提取需要的字段
-        setSettings({
+        const newSettings = {
           cursorDbPath: data.cursorDbPath || '',
           cursorAppPath: data.cursorAppPath || '',
           batchRefreshSize: data.batchRefreshSize || 5,
           switchResetMachineId: data.switchResetMachineId !== undefined ? data.switchResetMachineId : true,
-          switchClearHistory: data.switchClearHistory || false
-        })
+          switchClearHistory: data.switchClearHistory || false,
+          showSwitchProgress: data.showSwitchProgress !== undefined ? data.showSwitchProgress : true
+        }
+        setSettings(newSettings)
+        // 同步保存到 localStorage
+        localStorage.setItem('appSettings', JSON.stringify(newSettings))
       }
     } catch (error) {
       console.error('加载设置失败:', error)
@@ -239,14 +277,17 @@ function App() {
   // 检查更新
   const checkForUpdates = async () => {
     try {
-      if (window.electronAPI && (window.electronAPI as any).checkForUpdates) {
-        const result = await (window.electronAPI as any).checkForUpdates()
+      if (window.electronAPI?.checkForUpdates) {
+        const result = await window.electronAPI.checkForUpdates()
         if (result.success && result.hasUpdate) {
           setUpdateInfo({
+            show: true,
             hasUpdate: true,
+            currentVersion: result.currentVersion,
             latestVersion: result.latestVersion,
             releaseUrl: result.releaseUrl,
-            releaseNotes: result.releaseNotes
+            releaseNotes: result.releaseNotes,
+            manualDownload: result.manualDownload || false
           })
           console.log('🎉 发现新版本:', result.latestVersion)
         }
@@ -988,17 +1029,20 @@ function App() {
     setEditingToken(null)
   }
 
-  const handleSaveSettings = async (newSettings: { cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean }) => {
+  const handleSaveSettings = async (newSettings: { cursorAppPath?: string; batchRefreshSize?: number; switchResetMachineId?: boolean; switchClearHistory?: boolean; showSwitchProgress?: boolean }) => {
     try {
       const mergedSettings = {
         ...settings,
         cursorAppPath: newSettings.cursorAppPath ?? settings.cursorAppPath,
         batchRefreshSize: newSettings.batchRefreshSize ?? settings.batchRefreshSize,
         switchResetMachineId: newSettings.switchResetMachineId ?? settings.switchResetMachineId,
-        switchClearHistory: newSettings.switchClearHistory ?? settings.switchClearHistory
+        switchClearHistory: newSettings.switchClearHistory ?? settings.switchClearHistory,
+        showSwitchProgress: newSettings.showSwitchProgress ?? settings.showSwitchProgress
       }
       await window.electronAPI.saveSettings(mergedSettings)
       setSettings(mergedSettings)
+      // 同步保存到 localStorage，供进度监听器使用
+      localStorage.setItem('appSettings', JSON.stringify(mergedSettings))
       
       showDialog({
         title: '设置已保存',
@@ -1128,6 +1172,20 @@ function App() {
         logs={refreshLogModal.logs}
         progress={refreshLogModal.progress}
         onClose={handleCloseRefreshLog}
+      />
+      
+      <UpdateNotification
+        show={updateInfo.show}
+        currentVersion={updateInfo.currentVersion || ''}
+        latestVersion={updateInfo.latestVersion || ''}
+        releaseNotes={updateInfo.releaseNotes}
+        releaseUrl={updateInfo.releaseUrl}
+        manualDownload={updateInfo.manualDownload}
+        onClose={() => setUpdateInfo(prev => ({ ...prev, show: false }))}
+        onUpdate={() => {
+          // 如果是手动下载模式，onUpdate 会打开浏览器
+          // 如果是自动更新模式，onUpdate 会触发下载
+        }}
       />
     </div>
   )
