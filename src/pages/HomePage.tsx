@@ -8,6 +8,7 @@ interface HomePageProps {
   onAddAccount: () => void
   onRefreshAll: () => void
   onSyncLocal: () => void
+  onShowUsageDetails?: (token: Token) => void
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
@@ -15,7 +16,8 @@ const HomePage: React.FC<HomePageProps> = ({
   onNavigate, 
   onAddAccount,
   onRefreshAll,
-  onSyncLocal 
+  onSyncLocal,
+  onShowUsageDetails
 }) => {
   const activeToken = tokens.find(t => t.isActive)
   const totalTokens = tokens.length
@@ -113,7 +115,18 @@ const HomePage: React.FC<HomePageProps> = ({
         <div className="active-account-card">
           <div className="card-header">
             <h3 className="card-title">🔹 当前活跃账号</h3>
-            <span className="active-badge">活跃中</span>
+            <div className="card-header-actions">
+              {onShowUsageDetails && (
+                <button 
+                  className="usage-details-btn"
+                  onClick={() => onShowUsageDetails(activeToken)}
+                  title="查看使用详情"
+                >
+                  📊 使用详情
+                </button>
+              )}
+              <span className="active-badge">活跃中</span>
+            </div>
           </div>
           <div className="account-info">
             <div className="info-row">

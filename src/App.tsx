@@ -10,6 +10,7 @@ import TokenFormModal from './components/TokenFormModal'
 import Dialog from './components/Dialog'
 import ProgressModal from './components/ProgressModal'
 import RefreshLogModal from './components/RefreshLogModal'
+import UsageDetailsModal from './components/UsageDetailsModal'
 import './styles/App.css'
 
 export interface Token {
@@ -75,6 +76,13 @@ function App() {
       current: 0,
       total: 0
     }
+  })
+  
+  // 使用详情弹窗状态
+  const [usageDetailsModal, setUsageDetailsModal] = useState({
+    show: false,
+    accountName: '',
+    cookieFormat: ''
   })
 
   const [settings, setSettings] = useState({
@@ -1081,6 +1089,24 @@ function App() {
     })
   }
 
+  // 显示使用详情
+  const handleShowUsageDetails = (token: Token) => {
+    setUsageDetailsModal({
+      show: true,
+      accountName: token.accountInfo?.email || token.name || '未命名账号',
+      cookieFormat: token.accountInfo?.cookieFormat || token.token
+    })
+  }
+
+  // 关闭使用详情弹窗
+  const handleCloseUsageDetails = () => {
+    setUsageDetailsModal({
+      show: false,
+      accountName: '',
+      cookieFormat: ''
+    })
+  }
+
   return (
     <div className="app">
       <TitleBar />
@@ -1100,6 +1126,7 @@ function App() {
               onAddAccount={handleAddNew}
               onRefreshAll={() => refreshAllUsage(true)}
               onSyncLocal={() => handleSyncAccount(true)}
+              onShowUsageDetails={handleShowUsageDetails}
             />
           )}
           
@@ -1111,6 +1138,7 @@ function App() {
               onDeleteToken={handleDeleteToken}
               onSetActive={handleSetActive}
               onRefreshUsage={handleCheckUsage}
+              onShowUsageDetails={handleShowUsageDetails}
               onSyncLocal={() => handleSyncAccount(true)}
               onRefreshAll={() => refreshAllUsage(true)}
               onClearFreeAccounts={handleClearFreeAccounts}
@@ -1167,6 +1195,14 @@ function App() {
         logs={refreshLogModal.logs}
         progress={refreshLogModal.progress}
         onClose={handleCloseRefreshLog}
+      />
+      
+      <UsageDetailsModal
+        show={usageDetailsModal.show}
+        accountName={usageDetailsModal.accountName}
+        cookieFormat={usageDetailsModal.cookieFormat}
+        onClose={handleCloseUsageDetails}
+        onShowDialog={showDialog}
       />
     </div>
   )

@@ -10,6 +10,7 @@ interface AccountManagePageProps {
   onDeleteToken: (id: string) => void
   onSetActive: (id: string) => void
   onRefreshUsage: (id: string) => void
+  onShowUsageDetails: (token: Token) => void
   onSyncLocal: () => void
   onRefreshAll: () => void
   onClearFreeAccounts: () => void
@@ -23,6 +24,7 @@ const AccountManagePage: React.FC<AccountManagePageProps> = ({
   onDeleteToken,
   onSetActive,
   onRefreshUsage,
+  onShowUsageDetails,
   onSyncLocal,
   onRefreshAll,
   onClearFreeAccounts,
@@ -109,6 +111,7 @@ const AccountManagePage: React.FC<AccountManagePageProps> = ({
           onDelete={onDeleteToken}
           onSetActive={onSetActive}
           onCheckUsage={onRefreshUsage}
+          onShowUsageDetails={onShowUsageDetails}
           onShowDialog={onShowDialog}
         />
 

@@ -31,6 +31,14 @@ interface Window {
     switchCursorAccount: (id: string, options?: { resetMachineId?: boolean, clearHistory?: boolean }) => Promise<{ success: boolean; error?: string; path?: string; needCursorPath?: boolean; message?: string }>
     getAccountInfo: (token: string) => Promise<{ success: boolean; accountInfo?: { email?: string; name?: string; username?: string; id?: string; plan?: string; avatar?: string; [key: string]: any }; error?: string; errorMessage?: string; endpoint?: string }>
     checkTokenUsage: (id: string) => Promise<{ success: boolean; usage?: { used: number; limit: number | null; remaining?: number | null; percentage: number | null }; error?: string }>
+    fetchUsageDetails: (params: {
+      cookieFormat: string
+      startDate: string
+      endDate: string
+      page: number
+      pageSize: number
+      teamId: number
+    }) => Promise<{ success: boolean; data?: { totalUsageEventsCount: number; usageEventsDisplay: any[] }; error?: string }>
     minimizeWindow: () => Promise<void>
     maximizeWindow: () => Promise<void>
     closeWindow: () => Promise<void>

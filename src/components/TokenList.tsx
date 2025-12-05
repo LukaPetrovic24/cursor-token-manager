@@ -8,6 +8,7 @@ interface TokenListProps {
   onDelete: (id: string) => void
   onSetActive: (id: string) => void
   onCheckUsage: (id: string) => void
+  onShowUsageDetails: (token: Token) => void
   onShowDialog: (options: {
     title?: string
     message: string
@@ -25,6 +26,7 @@ const TokenList: React.FC<TokenListProps> = ({
   onDelete,
   onSetActive,
   onCheckUsage,
+  onShowUsageDetails,
   onShowDialog
 }) => {
   if (tokens.length === 0) {
@@ -213,6 +215,15 @@ const TokenList: React.FC<TokenListProps> = ({
                       title="刷新用量"
                     >
                       🔄
+                    </button>
+
+                    {/* 使用详情按钮 */}
+                    <button
+                      className="btn-icon"
+                      onClick={() => onShowUsageDetails(token)}
+                      title="查看使用详情"
+                    >
+                      📊
                     </button>
 
                     {/* 更多菜单 */}
