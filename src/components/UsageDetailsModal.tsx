@@ -5,10 +5,10 @@ interface UsageEvent {
   timestamp: string
   model: string
   kind: string
-  requestsCosts: number
-  tokenUsage: {
-    inputTokens: number
-    outputTokens: number
+  requestsCosts?: number
+  tokenUsage?: {
+    inputTokens?: number
+    outputTokens?: number
     cacheWriteTokens?: number
     cacheReadTokens?: number
     totalCents?: number
@@ -143,11 +143,12 @@ const UsageDetailsModal: React.FC<UsageDetailsModalProps> = ({
     })
   }
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString('zh-CN')
+  const formatNumber = (num: number | undefined) => {
+    return (num || 0).toLocaleString('zh-CN')
   }
 
   const getTotalTokens = (tokenUsage: UsageEvent['tokenUsage']) => {
+    if (!tokenUsage) return 0
     const input = tokenUsage.inputTokens || 0
     const output = tokenUsage.outputTokens || 0
     const cacheWrite = tokenUsage.cacheWriteTokens || 0
@@ -163,16 +164,18 @@ const UsageDetailsModal: React.FC<UsageDetailsModalProps> = ({
 
     const totalRequests = usageData.totalUsageEventsCount || 0
     const totalCost = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.requestsCosts || 0), 0)
-    const totalInputTokens = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage.inputTokens || 0), 0)
-    const totalOutputTokens = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage.outputTokens || 0), 0)
-    const totalCacheRead = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage.cacheReadTokens || 0), 0)
-    const totalCacheWrite = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage.cacheWriteTokens || 0), 0)
-    const totalAmount = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage.totalCents || 0), 0)
+    const totalInputTokens = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage?.inputTokens || 0), 0)
+    const totalOutputTokens = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage?.outputTokens || 0), 0)
+    const totalCacheRead = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage?.cacheReadTokens || 0), 0)
+    const totalCacheWrite = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage?.cacheWriteTokens || 0), 0)
+    const totalAmount = usageData.usageEventsDisplay.reduce((sum, event) => sum + (event.tokenUsage?.totalCents || 0), 0)
     
     // 统计模型使用次数
     const modelCounts: Record<string, number> = {}
     usageData.usageEventsDisplay.forEach(event => {
-      modelCounts[event.model] = (modelCounts[event.model] || 0) + 1
+      if (event.model) {
+        modelCounts[event.model] = (modelCounts[event.model] || 0) + 1
+      }
     })
 
     return {
@@ -300,34 +303,34 @@ const UsageDetailsModal: React.FC<UsageDetailsModalProps> = ({
                 {usageData.usageEventsDisplay.map((event, index) => (
                   <div key={index} className="usage-event-item">
                     <div className="usage-event-header">
-                      <span className="usage-event-model">{event.model}</span>
+                      <span className="usage-event-model">{event.model || '未知模型'}</span>
                       <div className="usage-event-header-right">
-                        {event.tokenUsage.totalCents !== undefined && event.tokenUsage.totalCents > 0 && (
+                        {event.tokenUsage?.totalCents !== undefined && event.tokenUsage.totalCents > 0 && (
                           <span className="usage-event-amount">${(event.tokenUsage.totalCents / 100).toFixed(4)}</span>
                         )}
-                        <span className="usage-event-time">{formatTimestamp(event.timestamp)}</span>
+                        <span className="usage-event-time">{event.timestamp ? formatTimestamp(event.timestamp) : '-'}</span>
                       </div>
                     </div>
                     <div className="usage-event-details">
                       <div className="usage-event-detail">
                         <span className="usage-detail-label">请求消耗:</span>
-                        <span className="usage-detail-value">{event.requestsCosts.toFixed(2)} 次</span>
+                        <span className="usage-detail-value">{(event.requestsCosts || 0).toFixed(2)} 次</span>
                       </div>
                       <div className="usage-event-detail">
                         <span className="usage-detail-label">输入 Token:</span>
-                        <span className="usage-detail-value">{formatNumber(event.tokenUsage.inputTokens)}</span>
+                        <span className="usage-detail-value">{formatNumber(event.tokenUsage?.inputTokens)}</span>
                       </div>
                       <div className="usage-event-detail">
                         <span className="usage-detail-label">输出 Token:</span>
-                        <span className="usage-detail-value">{formatNumber(event.tokenUsage.outputTokens)}</span>
+                        <span className="usage-detail-value">{formatNumber(event.tokenUsage?.outputTokens)}</span>
                       </div>
-                      {event.tokenUsage.cacheReadTokens !== undefined && event.tokenUsage.cacheReadTokens > 0 && (
+                      {event.tokenUsage?.cacheReadTokens !== undefined && event.tokenUsage.cacheReadTokens > 0 && (
                         <div className="usage-event-detail">
                           <span className="usage-detail-label">缓存读取:</span>
                           <span className="usage-detail-value">{formatNumber(event.tokenUsage.cacheReadTokens)}</span>
                         </div>
                       )}
-                      {event.tokenUsage.cacheWriteTokens !== undefined && event.tokenUsage.cacheWriteTokens > 0 && (
+                      {event.tokenUsage?.cacheWriteTokens !== undefined && event.tokenUsage.cacheWriteTokens > 0 && (
                         <div className="usage-event-detail">
                           <span className="usage-detail-label">缓存写入:</span>
                           <span className="usage-detail-value">{formatNumber(event.tokenUsage.cacheWriteTokens)}</span>
@@ -378,4 +381,3 @@ const UsageDetailsModal: React.FC<UsageDetailsModalProps> = ({
 }
 
 export default UsageDetailsModal
-
