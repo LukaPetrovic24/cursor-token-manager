@@ -39,6 +39,13 @@ interface Window {
       pageSize: number
       teamId: number
     }) => Promise<{ success: boolean; data?: { totalUsageEventsCount: number; usageEventsDisplay: any[] }; error?: string }>
+    verifyToken: (token: string) => Promise<{ 
+      success: boolean
+      accountInfo?: any
+      usage?: { used: number; limit: number | null; remaining: number | null; percentage: number | null }
+      recentUsage?: { last7Days: number; totalAmount: number; lastUsageTime?: string }
+      error?: string
+    }>
     minimizeWindow: () => Promise<void>
     maximizeWindow: () => Promise<void>
     closeWindow: () => Promise<void>

@@ -11,6 +11,7 @@ interface AccountManagePageProps {
   onSetActive: (id: string) => void
   onRefreshUsage: (id: string) => void
   onShowUsageDetails: (token: Token) => void
+  onShowVerification: () => void
   onSyncLocal: () => void
   onRefreshAll: () => void
   onClearFreeAccounts: () => void
@@ -25,6 +26,7 @@ const AccountManagePage: React.FC<AccountManagePageProps> = ({
   onSetActive,
   onRefreshUsage,
   onShowUsageDetails,
+  onShowVerification,
   onSyncLocal,
   onRefreshAll,
   onClearFreeAccounts,
@@ -84,6 +86,9 @@ const AccountManagePage: React.FC<AccountManagePageProps> = ({
           </button>
           <button className="btn-secondary" onClick={onRefreshAll}>
             ⌛ 刷新用量
+          </button>
+          <button className="btn-secondary" onClick={onShowVerification}>
+            🔍 验号
           </button>
           {freeAccountsCount > 0 && (
             <button className="btn-danger-outline" onClick={handleClearFree}>

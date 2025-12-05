@@ -11,6 +11,7 @@ import Dialog from './components/Dialog'
 import ProgressModal from './components/ProgressModal'
 import RefreshLogModal from './components/RefreshLogModal'
 import UsageDetailsModal from './components/UsageDetailsModal'
+import TokenVerificationModal from './components/TokenVerificationModal'
 import './styles/App.css'
 
 export interface Token {
@@ -84,6 +85,9 @@ function App() {
     accountName: '',
     cookieFormat: ''
   })
+  
+  // 验号弹窗状态
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
 
   const [settings, setSettings] = useState({
     cursorDbPath: '',
@@ -1107,6 +1111,16 @@ function App() {
     })
   }
 
+  // 显示验号弹窗
+  const handleShowVerification = () => {
+    setShowVerificationModal(true)
+  }
+
+  // 关闭验号弹窗
+  const handleCloseVerification = () => {
+    setShowVerificationModal(false)
+  }
+
   return (
     <div className="app">
       <TitleBar />
@@ -1139,6 +1153,7 @@ function App() {
               onSetActive={handleSetActive}
               onRefreshUsage={handleCheckUsage}
               onShowUsageDetails={handleShowUsageDetails}
+              onShowVerification={handleShowVerification}
               onSyncLocal={() => handleSyncAccount(true)}
               onRefreshAll={() => refreshAllUsage(true)}
               onClearFreeAccounts={handleClearFreeAccounts}
@@ -1202,6 +1217,12 @@ function App() {
         accountName={usageDetailsModal.accountName}
         cookieFormat={usageDetailsModal.cookieFormat}
         onClose={handleCloseUsageDetails}
+        onShowDialog={showDialog}
+      />
+      
+      <TokenVerificationModal
+        show={showVerificationModal}
+        onClose={handleCloseVerification}
         onShowDialog={showDialog}
       />
     </div>
