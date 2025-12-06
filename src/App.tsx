@@ -6,6 +6,7 @@ import AccountManagePage from './pages/AccountManagePage'
 import SettingsPage from './pages/SettingsPage'
 import FAQPage from './pages/FAQPage'
 import SystemManagePage from './pages/SystemManagePage'
+import DatabaseManagePage from './pages/DatabaseManagePage'
 import TokenFormModal from './components/TokenFormModal'
 import Dialog from './components/Dialog'
 import ProgressModal from './components/ProgressModal'
@@ -52,7 +53,7 @@ export interface DialogOptions {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'accounts' | 'settings' | 'faq' | 'system'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'accounts' | 'settings' | 'faq' | 'system' | 'database'>('home')
   const [tokens, setTokens] = useState<Token[]>([])
   const [editingToken, setEditingToken] = useState<Token | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -352,30 +353,30 @@ function App() {
         const result = await window.electronAPI.checkTokenUsage(token.id)
         
         if (result.success && result.usage) {
-          // 刷新成功
-          setTokens(prevTokens => 
-            prevTokens.map(t => {
-              if (t.id === token.id) {
-                const updatedToken: Token = { 
-                  ...t, 
-                  usage: result.usage,
-                  lastRefreshError: undefined
-                }
-                if (t.accountInfo) {
-                  updatedToken.accountInfo = {
-                    ...t.accountInfo,
-                    quota: {
-                      used: result.usage?.used,
-                      limit: result.usage?.limit,
-                      remaining: result.usage?.remaining
-                    }
-                  }
-                }
-                return updatedToken
+          // 构建更新后的 token
+          const updatedToken: Token = { 
+            ...token, 
+            usage: result.usage,
+            lastRefreshError: undefined
+          }
+          if (token.accountInfo) {
+            updatedToken.accountInfo = {
+              ...token.accountInfo,
+              quota: {
+                used: result.usage?.used,
+                limit: result.usage?.limit,
+                remaining: result.usage?.remaining
               }
-              return t
-            })
+            }
+          }
+          
+          // 刷新成功 - 更新前端状态
+          setTokens(prevTokens => 
+            prevTokens.map(t => t.id === token.id ? updatedToken : t)
           )
+          
+          // 保存到存储（持久化）
+          await window.electronAPI.saveToken(updatedToken)
           
           // 更新日志为成功
           setRefreshLogModal(prev => ({
@@ -969,9 +970,10 @@ function App() {
       const result = await window.electronAPI.checkTokenUsage(id)
       if (result.success && result.usage) {
         // 更新 token 的用量信息和 accountInfo 中的 quota 信息
+        let updatedToken: Token | null = null
         const updatedTokens = tokens.map(t => {
           if (t.id === id) {
-            const updatedToken: Token = { 
+            updatedToken = { 
               ...t, 
               usage: result.usage 
             }
@@ -991,6 +993,11 @@ function App() {
           return t
         })
         setTokens(updatedTokens)
+        
+        // 保存更新后的 token 到存储（持久化）
+        if (updatedToken) {
+          await window.electronAPI.saveToken(updatedToken)
+        }
         
         // 显示成功提示
         hideDialog()
@@ -1173,6 +1180,13 @@ function App() {
             <FAQPage />
           )}
           
+          {currentPage === 'database' && (
+            <DatabaseManagePage 
+              tokens={tokens}
+              onShowDialog={showDialog}
+            />
+          )}
+          
           {currentPage === 'system' && (
             <SystemManagePage updateInfo={updateInfo} />
           )}
@@ -1224,6 +1238,7 @@ function App() {
         show={showVerificationModal}
         onClose={handleCloseVerification}
         onShowDialog={showDialog}
+        onAccountAdded={loadTokens}
       />
     </div>
   )

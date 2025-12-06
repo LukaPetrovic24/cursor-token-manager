@@ -33,12 +33,14 @@ interface TokenVerificationModalProps {
     type?: 'info' | 'confirm' | 'warning' | 'error'
     onConfirm?: () => void
   }) => void
+  onAccountAdded?: () => void  // 添加账号后的回调，用于刷新列表
 }
 
 const TokenVerificationModal: React.FC<TokenVerificationModalProps> = ({
   show,
   onClose,
-  onShowDialog
+  onShowDialog,
+  onAccountAdded
 }) => {
   const [mode, setMode] = useState<'single' | 'batch'>('single')
   const [tokenInput, setTokenInput] = useState('')
@@ -415,13 +417,87 @@ const TokenVerificationModal: React.FC<TokenVerificationModalProps> = ({
     setVerifying(false)
   }
 
+  // 下载示例模板文件
+  const handleDownloadTemplate = (format: 'token' | 'cookie') => {
+    let content = ''
+    let filename = ''
+    
+    if (format === 'token') {
+      filename = '批量验号模板-Token格式.csv'
+      content = `token
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHx1c2VyXzAxS0JHMU0yRUVLSE43TlNLMFJLOUdQUzFTIiwidGltZSI6IjE3NjQ2OTY0MjQiLCJyYW5kb21uZXNzIjoiMjFiNDA2NWMtMjg5Yy00ZDE5IiwiZXhwIjoxNzY5ODgwNDI0LCJpc3MiOiJodHRwczovL2F1dGhlbnRpY2F0aW9uLmN1cnNvci5zaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgb2ZmbGluZV9hY2Nlc3MiLCJhdWQiOiJodHRwczovL2N1cnNvci5jb20iLCJ0eXBlIjoic2Vzc2lvbiJ9.TM6fVc7_EPFJHgAjMJeL225Nd8l76Ll7Z8y5cblp4pA
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHx1c2VyXzAxS0JHMU02VDRZWUNISDdUNEZLUFlNUTBDIiwidGltZSI6IjE3NjQ2OTY0MjkiLCJyYW5kb21uZXNzIjoiYTY2MWI3NGMtYjBiOC00YTM0IiwiZXhwIjoxNzY5ODgwNDI5LCJpc3MiOiJodHRwczovL2F1dGhlbnRpY2F0aW9uLmN1cnNvci5zaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgb2ZmbGluZV9hY2Nlc3MiLCJhdWQiOiJodHRwczovL2N1cnNvci5jb20iLCJ0eXBlIjoic2Vzc2lvbiJ9.B3-1XnjZ10JLQ9eRUavuwVA_Th0rM_HNnc1YpGaBNy4
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHx1c2VyXzAxS0JHMU02WVZNUFhXSEpBQVpRUVhXTUY5IiwidGltZSI6IjE3NjQ2OTY0MzEiLCJyYW5kb21uZXNzIjoiNGFmNTI0NjEtNzQwMC00MzY5IiwiZXhwIjoxNzY5ODgwNDMxLCJpc3MiOiJodHRwczovL2F1dGhlbnRpY2F0aW9uLmN1cnNvci5zaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgb2ZmbGluZV9hY2Nlc3MiLCJhdWQiOiJodHRwczovL2N1cnNvci5jb20iLCJ0eXBlIjoic2Vzc2lvbiJ9.MnmSNaLk7qraclM5A7184GcWwakQWU5kAzX-hbrKV0U`
+    } else {
+      filename = '批量验号模板-Cookie格式.csv'
+      content = `cookie
+user_01KB0CR6X1BH2WRHB897DDT77Z%3A%3AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHx1c2VyXzAxS0IwQ1I2WDFCSDJXUkhCODk3RERUNzdaIiwidGltZSI6IjE3NjQ4NTg3NTEiLCJyYW5kb21uZXNzIjoiNTZhMzZjNTgtMDBjOS00YzZlIiwiZXhwIjoxNzcwMDQyNzUxLCJpc3MiOiJodHRwczovL2F1dGhlbnRpY2F0aW9uLmN1cnNvci5zaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgb2ZmbGluZV9hY2Nlc3MiLCJhdWQiOiJodHRwczovL2N1cnNvci5jb20iLCJ0eXBlIjoic2Vzc2lvbiJ9.4OngOyuxNjHZjcdnNfJBrjIHJ6ngOtRLvsmGb5YtPyg
+user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHx1c2VyXzAxS0JHMU02VDRZWUNISDdUNEZLUFlNUTBDIiwidGltZSI6IjE3NjQ2OTY0MjUiLCJyYW5kb21uZXNzIjoiMGM5ODYzM2YtZWFhNi00NmQxIiwiZXhwIjoxNzY5ODgwNDI1LCJpc3MiOiJodHRwczovL2F1dGhlbnRpY2F0aW9uLmN1cnNvci5zaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgb2ZmbGluZV9hY2Nlc3MiLCJhdWQiOiJodHRwczovL2N1cnNvci5jb20iLCJ0eXBlIjoid2ViIn0.JOLYQi1ZAM1Xmruz7goP1M79wb3wOsMuByaO6MGqLeg`
+    }
+    
+    // 创建 Blob 并下载
+    const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(link.href)
+  }
+
+  // 辅助函数：解析 Token 并提取信息
+  const parseTokenInfo = (fullToken: string) => {
+    let workosId = ''
+    let longTermToken = fullToken
+    let cookieFormat = fullToken
+    let emailFromToken = ''
+    
+    // 检查是否是 cookie 格式 (包含 %3A%3A 或 ::)
+    if (fullToken.includes('%3A%3A')) {
+      const parts = fullToken.split('%3A%3A')
+      workosId = parts[0] || ''
+      longTermToken = parts[1] || fullToken
+      cookieFormat = fullToken
+    } else if (fullToken.includes('::')) {
+      const parts = fullToken.split('::')
+      workosId = parts[0] || ''
+      longTermToken = parts[1] || fullToken
+      cookieFormat = `${workosId}%3A%3A${longTermToken}`
+    }
+    
+    // 尝试从 JWT payload 中提取 workosId 和 email
+    try {
+      const jwtToken = longTermToken.startsWith('eyJ') ? longTermToken : fullToken
+      const jwtParts = jwtToken.split('.')
+      if (jwtParts.length === 3) {
+        const base64 = jwtParts[1].replace(/-/g, '+').replace(/_/g, '/')
+        const padded = base64 + '='.repeat((4 - base64.length % 4) % 4)
+        const payload = JSON.parse(atob(padded))
+        
+        // 提取 workosId
+        if (!workosId && payload.sub) {
+          workosId = payload.sub.split('|')[1] || payload.sub
+          cookieFormat = `${workosId}%3A%3A${longTermToken}`
+        }
+        
+        // 提取 email
+        if (payload.email) {
+          emailFromToken = payload.email
+        }
+      }
+    } catch (e) {
+      console.warn('无法解析 JWT:', e)
+    }
+    
+    return { workosId, longTermToken, cookieFormat, emailFromToken }
+  }
+
   // 导出结果
   // 添加到账号列表
   const handleAddToList = async (result: VerificationResult) => {
-    if (!result.email || !result.fullToken) {
+    if (!result.fullToken) {
       onShowDialog({
         title: '错误',
-        message: '无法获取账号信息',
+        message: '无法获取 Token 信息',
         type: 'error',
         onConfirm: () => {}
       })
@@ -429,29 +505,89 @@ const TokenVerificationModal: React.FC<TokenVerificationModalProps> = ({
     }
 
     try {
+      // 解析 token 格式
+      const { workosId, longTermToken, cookieFormat, emailFromToken } = parseTokenInfo(result.fullToken)
+      
+      // 确定邮箱：优先使用验号结果，其次使用 JWT 中的，最后使用 workosId
+      const email = result.email || emailFromToken || (workosId ? `账号_${workosId.slice(-8)}` : `账号_${Date.now()}`)
+      
+      console.log('📝 添加账号:', { 
+        email, 
+        resultEmail: result.email, 
+        emailFromToken, 
+        workosId,
+        plan: result.plan 
+      })
+      
       // 获取现有的账号列表
       const existingTokens = await window.electronAPI.getTokens()
       
-      // 检查是否已存在该账号（通过邮箱匹配）
-      const existingToken = existingTokens.find((t: any) => t.name === result.email)
+      // 检查是否已存在该账号（通过邮箱或 workosId 匹配）
+      const existingToken = existingTokens.find((t: any) => 
+        (email && (t.name === email || t.accountInfo?.email === email)) ||
+        (workosId && t.accountInfo?.id === workosId)
+      )
+      
+      // 构建完整的 accountInfo
+      const accountInfo: any = {
+        email: email,
+        plan: result.plan,
+        subscriptionStatus: result.subscriptionStatus,
+        longTermToken: longTermToken,
+        cookieFormat: cookieFormat,
+        id: workosId || undefined
+      }
+      
+      // 添加过期时间
+      if (result.expiryDate) {
+        accountInfo.trialExpiryDate = result.expiryDate
+        accountInfo.isTrial = true
+        const expiryTime = new Date(result.expiryDate).getTime()
+        const now = Date.now()
+        const daysRemaining = Math.ceil((expiryTime - now) / (1000 * 60 * 60 * 24))
+        if (daysRemaining > 0) {
+          accountInfo.daysRemainingOnTrial = daysRemaining
+        }
+      }
+      
+      // 添加额度信息
+      if (result.usage) {
+        accountInfo.quota = {
+          used: result.usage.used,
+          limit: result.usage.limit,
+          remaining: result.usage.limit !== null ? result.usage.limit - result.usage.used : null
+        }
+      }
+      
+      // 构建 usage 对象用于前端显示
+      const usageData = result.usage ? {
+        used: result.usage.used,
+        limit: result.usage.limit,
+        remaining: result.usage.limit !== null ? result.usage.limit - result.usage.used : null,
+        percentage: result.usage.percentage
+      } : undefined
       
       let saveResult
       if (existingToken) {
         // 更新已存在的账号
         saveResult = await window.electronAPI.saveToken({
           id: existingToken.id,
-          name: result.email,
-          token: result.fullToken,
-          isActive: existingToken.isActive
+          name: email,
+          token: cookieFormat,
+          isActive: existingToken.isActive,
+          accountInfo: accountInfo,
+          usage: usageData,
+          createTime: existingToken.createTime || new Date().toISOString()
         })
 
         if (saveResult.success) {
           onShowDialog({
             title: '成功',
-            message: `账号 ${result.email} 已更新`,
-            type: 'success',
+            message: `账号 ${email} 已更新`,
+            type: 'info',
             onConfirm: () => {}
           })
+          onAccountAdded?.()
         } else {
           throw new Error('更新失败')
         }
@@ -459,26 +595,170 @@ const TokenVerificationModal: React.FC<TokenVerificationModalProps> = ({
         // 添加新账号
         saveResult = await window.electronAPI.saveToken({
           id: `token_${Date.now()}`,
-          name: result.email,
-          token: result.fullToken,
-          isActive: false
+          name: email,
+          token: cookieFormat,
+          isActive: false,
+          accountInfo: accountInfo,
+          usage: usageData,
+          createTime: new Date().toISOString()
         })
 
         if (saveResult.success) {
           onShowDialog({
             title: '成功',
-            message: `账号 ${result.email} 已添加到列表`,
-            type: 'success',
+            message: `账号 ${email} 已添加到列表`,
+            type: 'info',
             onConfirm: () => {}
           })
+          onAccountAdded?.()
         } else {
           throw new Error('保存失败')
         }
       }
     } catch (error: any) {
+      console.error('添加账号失败:', error)
       onShowDialog({
         title: '错误',
         message: `操作失败: ${error.message}`,
+        type: 'error',
+        onConfirm: () => {}
+      })
+    }
+  }
+
+  // 添加全部通过的账号到列表
+  const handleAddAllToList = async () => {
+    // 获取所有通过验证的账号（success 和 warning 状态，必须有 fullToken）
+    const passedResults = results.filter(r => 
+      (r.status === 'success' || r.status === 'warning') && r.fullToken
+    )
+    
+    if (passedResults.length === 0) {
+      onShowDialog({
+        title: '提示',
+        message: '没有通过验证的账号可以添加',
+        type: 'warning',
+        onConfirm: () => {}
+      })
+      return
+    }
+
+    let addedCount = 0
+    let updatedCount = 0
+    let failedCount = 0
+    
+    try {
+      // 获取现有的账号列表
+      const existingTokens = await window.electronAPI.getTokens()
+      
+      for (const result of passedResults) {
+        try {
+          // 使用辅助函数解析 token
+          const { workosId, longTermToken, cookieFormat, emailFromToken } = parseTokenInfo(result.fullToken!)
+          
+          // 确定邮箱
+          const email = result.email || emailFromToken || (workosId ? `账号_${workosId.slice(-8)}` : `账号_${Date.now()}`)
+          
+          // 检查是否已存在该账号
+          const existingToken = existingTokens.find((t: any) => 
+            (email && (t.name === email || t.accountInfo?.email === email)) ||
+            (workosId && t.accountInfo?.id === workosId)
+          )
+          
+          // 构建 accountInfo
+          const accountInfo: any = {
+            email: email,
+            plan: result.plan,
+            subscriptionStatus: result.subscriptionStatus,
+            longTermToken: longTermToken,
+            cookieFormat: cookieFormat,
+            id: workosId || undefined
+          }
+          
+          if (result.expiryDate) {
+            accountInfo.trialExpiryDate = result.expiryDate
+            accountInfo.isTrial = true
+            const expiryTime = new Date(result.expiryDate).getTime()
+            const now = Date.now()
+            const daysRemaining = Math.ceil((expiryTime - now) / (1000 * 60 * 60 * 24))
+            if (daysRemaining > 0) {
+              accountInfo.daysRemainingOnTrial = daysRemaining
+            }
+          }
+          
+          if (result.usage) {
+            accountInfo.quota = {
+              used: result.usage.used,
+              limit: result.usage.limit,
+              remaining: result.usage.limit !== null ? result.usage.limit - result.usage.used : null
+            }
+          }
+          
+          const usageData = result.usage ? {
+            used: result.usage.used,
+            limit: result.usage.limit,
+            remaining: result.usage.limit !== null ? result.usage.limit - result.usage.used : null,
+            percentage: result.usage.percentage
+          } : undefined
+          
+          let saveResult
+          if (existingToken) {
+            // 更新
+            saveResult = await window.electronAPI.saveToken({
+              id: existingToken.id,
+              name: email,
+              token: cookieFormat,
+              isActive: existingToken.isActive,
+              accountInfo: accountInfo,
+              usage: usageData,
+              createTime: existingToken.createTime || new Date().toISOString()
+            })
+            if (saveResult.success) updatedCount++
+            else failedCount++
+          } else {
+            // 新增
+            saveResult = await window.electronAPI.saveToken({
+              id: `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              name: email,
+              token: cookieFormat,
+              isActive: false,
+              accountInfo: accountInfo,
+              usage: usageData,
+              createTime: new Date().toISOString()
+            })
+            if (saveResult.success) {
+              addedCount++
+              // 更新 existingTokens 避免重复添加
+              existingTokens.push({ name: email, accountInfo: { email: email, id: workosId } })
+            } else {
+              failedCount++
+            }
+          }
+        } catch (error) {
+          console.error('添加账号失败:', result.email || result.token, error)
+          failedCount++
+        }
+      }
+      
+      // 刷新账号列表
+      onAccountAdded?.()
+      
+      // 显示结果
+      let message = ''
+      if (addedCount > 0) message += `新增 ${addedCount} 个账号`
+      if (updatedCount > 0) message += `${message ? '，' : ''}更新 ${updatedCount} 个账号`
+      if (failedCount > 0) message += `${message ? '，' : ''}失败 ${failedCount} 个`
+      
+      onShowDialog({
+        title: '批量添加完成',
+        message: message || '没有账号被添加',
+        type: failedCount > 0 ? 'warning' : 'info',
+        onConfirm: () => {}
+      })
+    } catch (error: any) {
+      onShowDialog({
+        title: '错误',
+        message: `批量添加失败: ${error.message}`,
         type: 'error',
         onConfirm: () => {}
       })
@@ -663,7 +943,15 @@ const TokenVerificationModal: React.FC<TokenVerificationModalProps> = ({
               </div>
 
               <div className="batch-template-hint">
-                <span className="template-title">📋 CSV 模板示例：</span>
+                <div className="template-header">
+                  <span className="template-title">📋 CSV 模板示例：</span>
+                  <button 
+                    className="download-template-btn"
+                    onClick={() => handleDownloadTemplate(batchFormat)}
+                  >
+                    📥 下载示例文件
+                  </button>
+                </div>
                 <pre className="template-code">
 {batchFormat === 'token' ? (
   <>token{'\n'}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...{'\n'}eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</>
@@ -695,10 +983,17 @@ const TokenVerificationModal: React.FC<TokenVerificationModalProps> = ({
                   {warningCount > 0 && <span className="stat-warning">⚠️ {warningCount}</span>}
                   {failedCount > 0 && <span className="stat-failed">❌ {failedCount}</span>}
                 </div>
-                {mode === 'batch' && (successCount > 0 || warningCount > 0) && (
-                  <button className="export-btn" onClick={handleExportResults}>
-                    📥 导出成功结果
-                  </button>
+                {(successCount > 0 || warningCount > 0) && (
+                  <div className="results-actions">
+                    <button className="add-all-btn" onClick={handleAddAllToList}>
+                      ➕ 添加全部 ({successCount + warningCount})
+                    </button>
+                    {mode === 'batch' && (
+                      <button className="export-btn" onClick={handleExportResults}>
+                        📥 导出结果
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 

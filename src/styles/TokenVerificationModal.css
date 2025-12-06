@@ -276,12 +276,37 @@
   padding: 16px;
 }
 
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .template-title {
   font-size: 13px;
   font-weight: 600;
   color: #374151;
-  display: block;
-  margin-bottom: 8px;
+}
+
+.download-template-btn {
+  padding: 6px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.download-template-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 
 .template-code {
@@ -403,6 +428,30 @@
 
 .export-btn:hover {
   background: #059669;
+  transform: translateY(-1px);
+}
+
+.results-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.add-all-btn {
+  padding: 8px 16px;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.add-all-btn:hover {
+  background: #4f46e5;
   transform: translateY(-1px);
 }
 

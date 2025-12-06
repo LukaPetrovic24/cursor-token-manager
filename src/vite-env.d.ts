@@ -25,7 +25,7 @@ declare module '*/package.json' {
 interface Window {
   electronAPI: {
     getTokens: () => Promise<any[]>
-    saveToken: (token: { id: string; name: string; token: string; isActive: boolean }) => Promise<{ success: boolean }>
+    saveToken: (token: { id: string; name: string; token: string; isActive: boolean; accountInfo?: any; usage?: any; createTime?: string }) => Promise<{ success: boolean }>
     deleteToken: (id: string) => Promise<{ success: boolean }>
     setActiveToken: (id: string) => Promise<{ success: boolean }>
     switchCursorAccount: (id: string, options?: { resetMachineId?: boolean, clearHistory?: boolean }) => Promise<{ success: boolean; error?: string; path?: string; needCursorPath?: boolean; message?: string }>
@@ -68,5 +68,21 @@ interface Window {
     onUpdateDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; total: number; transferred: number }) => void) => () => void
     onUpdateDownloaded: (callback: (info: any) => void) => () => void
     onUpdateError: (callback: (error: string) => void) => () => void
+    // 数据库管理
+    getDatabaseInfo: () => Promise<{
+      success: boolean
+      info?: {
+        dbPath: string
+        dbSize: number
+        dbSizeFormatted: string
+        globalStoragePath: string
+        globalStorageSize: number
+        globalStorageSizeFormatted: string
+        lastModified: string
+      }
+      error?: string
+    }>
+    resetDatabase: (accountId?: string) => Promise<{ success: boolean; error?: string }>
+    onDatabaseResetProgress: (callback: (data: { step: string; progress: number; message: string }) => void) => () => void
   }
 }

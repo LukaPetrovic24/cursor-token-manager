@@ -3,8 +3,8 @@ import packageJson from '../../package.json'
 import { useState, useEffect } from 'react'
 
 interface SidebarProps {
-  currentPage: 'home' | 'accounts' | 'settings' | 'faq' | 'system'
-  onPageChange: (page: 'home' | 'accounts' | 'settings' | 'faq' | 'system') => void
+  currentPage: 'home' | 'accounts' | 'settings' | 'faq' | 'system' | 'database'
+  onPageChange: (page: 'home' | 'accounts' | 'settings' | 'faq' | 'system' | 'database') => void
   tokensCount?: number
   updateInfo?: {
     hasUpdate: boolean
@@ -171,6 +171,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
           >
             <span className="nav-icon">⚙️</span>
             <span className="nav-label">设置</span>
+          </button>
+
+          <button
+            className={`nav-item ${currentPage === 'database' ? 'active' : ''}`}
+            onClick={() => onPageChange('database')}
+          >
+            <span className="nav-icon">🛠️</span>
+            <span className="nav-label">环境管理</span>
           </button>
 
           <button
