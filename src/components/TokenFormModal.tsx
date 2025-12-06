@@ -6,6 +6,7 @@ import '../styles/TokenFormModal.css'
 interface TokenFormModalProps {
   show: boolean
   token: Token | null
+  existingTokens?: Token[]
   onSave: (token: Token) => void
   onCancel: () => void
   onShowDialog: (options: {
@@ -22,6 +23,7 @@ interface TokenFormModalProps {
 const TokenFormModal: React.FC<TokenFormModalProps> = ({
   show,
   token,
+  existingTokens = [],
   onSave,
   onCancel,
   onShowDialog
@@ -34,12 +36,17 @@ const TokenFormModal: React.FC<TokenFormModalProps> = ({
     }
   }
 
+  const isViewMode = !!token
+
   return (
     <div className="token-form-modal-backdrop" onClick={handleBackdropClick}>
-      <div className="token-form-modal-container" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className={`token-form-modal-container ${isViewMode ? 'view-mode' : ''}`} 
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="token-form-modal-header">
           <h3 className="token-form-modal-title">
-            {token ? '账号详情' : '添加新账号'}
+            {token ? '账号详情' : '批量添加账号'}
           </h3>
           <button 
             className="token-form-modal-close"
@@ -52,6 +59,7 @@ const TokenFormModal: React.FC<TokenFormModalProps> = ({
         <div className="token-form-modal-content">
           <TokenForm
             token={token}
+            existingTokens={existingTokens}
             onSave={onSave}
             onCancel={onCancel}
             onShowDialog={onShowDialog}
@@ -63,5 +71,3 @@ const TokenFormModal: React.FC<TokenFormModalProps> = ({
 }
 
 export default TokenFormModal
-
-

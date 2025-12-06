@@ -4,9 +4,10 @@ import Sidebar from './components/Sidebar'
 import HomePage from './pages/HomePage'
 import AccountManagePage from './pages/AccountManagePage'
 import SettingsPage from './pages/SettingsPage'
-import FAQPage from './pages/FAQPage'
 import SystemManagePage from './pages/SystemManagePage'
 import DatabaseManagePage from './pages/DatabaseManagePage'
+import MacManagePage from './pages/MacManagePage'
+import DocsPage from './pages/DocsPage'
 import TokenFormModal from './components/TokenFormModal'
 import Dialog from './components/Dialog'
 import ProgressModal from './components/ProgressModal'
@@ -53,7 +54,7 @@ export interface DialogOptions {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'accounts' | 'settings' | 'faq' | 'system' | 'database'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'accounts' | 'settings' | 'system' | 'database' | 'mac' | 'docs'>('home')
   const [tokens, setTokens] = useState<Token[]>([])
   const [editingToken, setEditingToken] = useState<Token | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -189,11 +190,24 @@ function App() {
       // 检查更新
       checkForUpdates()
       
+      // 定时任务：每5分钟刷新当前活跃账号的用量
+      const usageRefreshInterval = setInterval(() => {
+        refreshActiveAccountUsage()
+      }, 5 * 60 * 1000) // 5分钟
+      
+      // 定时任务：每1小时检测更新
+      const updateCheckInterval = setInterval(() => {
+        console.log('⏰ 定时检测更新...')
+        checkForUpdates()
+      }, 60 * 60 * 1000) // 1小时
+      
       return () => {
         cleanup && cleanup()
         cleanupUpdateAvailable?.()
         cleanupUpdateNotAvailable?.()
         cleanupUpdateError?.()
+        clearInterval(usageRefreshInterval)
+        clearInterval(updateCheckInterval)
       }
     } else {
       console.error('electronAPI 未加载！请检查 preload 脚本是否正确加载。')
@@ -302,6 +316,59 @@ function App() {
       }
     } catch (error) {
       console.error('检查更新失败:', error)
+    }
+  }
+
+  // 静默刷新当前活跃账号的用量（不显示对话框）
+  const refreshActiveAccountUsage = async () => {
+    try {
+      // 直接使用 state 中的 tokens 查找活跃账号
+      const activeToken = tokens.find(t => t.isActive)
+      
+      if (!activeToken) {
+        console.log('⏰ 定时刷新：没有活跃账号')
+        return
+      }
+      
+      console.log(`⏰ 定时刷新：正在更新 ${activeToken.accountInfo?.email || '未命名账号'} 的用量...`)
+      
+      const result = await window.electronAPI.checkTokenUsage(activeToken.id)
+      
+      if (result.success && result.usage) {
+        // 更新 token 的用量信息
+        setTokens(prevTokens => {
+          const updatedTokens = prevTokens.map(t => {
+            if (t.id === activeToken.id) {
+              const updated: Token = { 
+                ...t, 
+                usage: result.usage,
+                lastRefreshError: undefined
+              }
+              if (t.accountInfo) {
+                updated.accountInfo = {
+                  ...t.accountInfo,
+                  quota: {
+                    used: result.usage?.used,
+                    limit: result.usage?.limit,
+                    remaining: result.usage?.remaining
+                  }
+                }
+              }
+              // 保存更新后的 token
+              window.electronAPI.saveToken(updated)
+              return updated
+            }
+            return t
+          })
+          return updatedTokens
+        })
+        
+        console.log(`✅ 定时刷新成功：${activeToken.accountInfo?.email} - 用量 ${result.usage.used}/${result.usage.limit}`)
+      } else {
+        console.warn(`⚠️ 定时刷新失败：${result.error || '未知错误'}`)
+      }
+    } catch (error) {
+      console.error('定时刷新活跃账号用量失败:', error)
     }
   }
 
@@ -696,8 +763,7 @@ function App() {
         }
       }
       
-      // 生成两种格式的 Token（longTermToken 和 cookieFormat）
-      // 无论是新增还是编辑，都确保生成两种格式
+      // 保存 Token 格式信息（添加时不获取长效token，切换账号时再获取）
       try {
         if (!token.accountInfo) token.accountInfo = {}
         
@@ -708,52 +774,45 @@ function App() {
         const isJWT = inputToken.startsWith('eyJ')
         
         if (isCookieFormat) {
-          // 如果输入的是 Cookie 格式，提取出 JWT 部分作为 longTermToken
-          let jwtPart = inputToken
+          // 如果输入的是 Cookie 格式，只保存 cookie，不提取 longTermToken
+          // longTermToken 在切换账号时再获取
+          let workosId = ''
           if (inputToken.includes('%3A%3A')) {
-            jwtPart = inputToken.split('%3A%3A')[1] || inputToken
+            const parts = inputToken.split('%3A%3A')
+            workosId = parts[0] || ''
           } else if (inputToken.includes('::')) {
-            jwtPart = inputToken.split('::')[1] || inputToken
+            const parts = inputToken.split('::')
+            workosId = parts[0] || ''
           }
           
-          token.accountInfo.longTermToken = jwtPart
+          // 不保存 longTermToken，切换时再获取
+          token.accountInfo.longTermToken = ''
           token.accountInfo.cookieFormat = inputToken
           
-          console.log('✅ 识别为 Cookie 格式，已提取 longTermToken')
-        } else if (isJWT) {
-          // 如果输入的是纯 JWT，需要转换为 Cookie 格式
-          const convertResult = await window.electronAPI.convertTokenToCookie(inputToken)
-          
-          if (convertResult.success && convertResult.cookieFormat) {
-            token.accountInfo.longTermToken = inputToken
-            token.accountInfo.cookieFormat = convertResult.cookieFormat
-            
-            // 默认保存 Cookie 格式（更通用）
-            token.token = convertResult.cookieFormat
-            
-            // 如果还没有 workosId，从转换结果中获取
-            if (!token.accountInfo.id && convertResult.workosId) {
-              token.accountInfo.id = convertResult.workosId
-            }
-            
-            console.log('✅ 已将 JWT 转换为 Cookie 格式')
-          } else {
-            // 转换失败，只保存 longTermToken
-            console.warn('⚠️ Cookie 格式转换失败，仅保存 longTermToken')
-            token.accountInfo.longTermToken = inputToken
-            token.accountInfo.cookieFormat = inputToken
+          // 提取 workosId
+          if (!token.accountInfo.id && workosId) {
+            token.accountInfo.id = workosId
           }
+          
+          console.log('✅ 识别为 Cookie 格式，只保存 cookie（切换时再获取长效token）')
+        } else if (isJWT) {
+          // 如果输入的是纯 JWT，直接保存
+          token.accountInfo.longTermToken = inputToken
+          // cookieFormat 暂时为空，切换时再生成
+          token.accountInfo.cookieFormat = ''
+          
+          console.log('✅ 识别为 JWT 格式，直接保存（切换账号时再转换）')
         } else {
           // 无法识别的格式，原样保存
           console.warn('⚠️ 无法识别 Token 格式，原样保存')
-          token.accountInfo.longTermToken = inputToken
+          token.accountInfo.longTermToken = ''
           token.accountInfo.cookieFormat = inputToken
         }
       } catch (error) {
-        console.error('生成 Token 格式失败:', error)
-        // 失败了也继续保存，只是缺少格式转换
+        console.error('处理 Token 格式失败:', error)
+        // 失败了也继续保存
         if (!token.accountInfo) token.accountInfo = {}
-        token.accountInfo.longTermToken = token.token
+        token.accountInfo.longTermToken = ''
         token.accountInfo.cookieFormat = token.token
       }
       
@@ -865,6 +924,85 @@ function App() {
         progress: 0,
         message: '准备切换账号...'
       })
+      
+      // 检查是否需要处理 Token 格式
+      if (targetToken && targetToken.accountInfo) {
+        const hasValidCookieFormat = targetToken.accountInfo.cookieFormat && 
+          (targetToken.accountInfo.cookieFormat.includes('%3A%3A') || targetToken.accountInfo.cookieFormat.includes('::'))
+        
+        const hasLongTermToken = !!targetToken.accountInfo.longTermToken
+        
+        const isJWTOnly = targetToken.token.startsWith('eyJ') && !targetToken.token.includes('%3A%3A') && !targetToken.token.includes('::')
+        
+        // 情况1: 有 cookie 但没有 longTermToken，从 cookie 中提取
+        if (hasValidCookieFormat && !hasLongTermToken) {
+          console.log('🔄 切换账号时从 Cookie 中提取长效 Token...')
+          setProgressModal(prev => ({
+            ...prev,
+            message: '正在获取长效 Token...'
+          }))
+          
+          const cookieValue = targetToken.accountInfo.cookieFormat!
+          let jwtPart = ''
+          
+          if (cookieValue.includes('%3A%3A')) {
+            jwtPart = cookieValue.split('%3A%3A')[1] || ''
+          } else if (cookieValue.includes('::')) {
+            jwtPart = cookieValue.split('::')[1] || ''
+          }
+          
+          if (jwtPart && jwtPart.startsWith('eyJ')) {
+            targetToken.accountInfo.longTermToken = jwtPart
+            
+            // 保存更新后的 token
+            await window.electronAPI.saveToken(targetToken)
+            
+            // 更新前端状态
+            setTokens(prevTokens => 
+              prevTokens.map(t => t.id === id ? { ...t, ...targetToken } : t)
+            )
+            
+            console.log('✅ 已从 Cookie 中提取长效 Token')
+          } else {
+            console.warn('⚠️ 无法从 Cookie 中提取长效 Token')
+          }
+        }
+        
+        // 情况2: 是纯 JWT 且没有 cookieFormat，需要转换为 Cookie 格式
+        if (!hasValidCookieFormat && (isJWTOnly || hasLongTermToken)) {
+          console.log('🔄 切换账号时进行 JWT → Cookie 格式转换...')
+          setProgressModal(prev => ({
+            ...prev,
+            message: '正在转换 Token 格式...'
+          }))
+          
+          const jwtToken = targetToken.accountInfo.longTermToken || targetToken.token
+          const convertResult = await window.electronAPI.convertTokenToCookie(jwtToken)
+          
+          if (convertResult.success && convertResult.cookieFormat) {
+            // 更新 token 信息
+            targetToken.accountInfo.cookieFormat = convertResult.cookieFormat
+            targetToken.token = convertResult.cookieFormat
+            
+            if (!targetToken.accountInfo.id && convertResult.workosId) {
+              targetToken.accountInfo.id = convertResult.workosId
+            }
+            
+            // 保存更新后的 token
+            await window.electronAPI.saveToken(targetToken)
+            
+            // 更新前端状态
+            setTokens(prevTokens => 
+              prevTokens.map(t => t.id === id ? { ...t, ...targetToken } : t)
+            )
+            
+            console.log('✅ Token 格式转换成功')
+          } else {
+            console.warn('⚠️ Token 格式转换失败:', convertResult.error)
+            // 转换失败，但仍尝试继续切换（可能后端能处理）
+          }
+        }
+      }
       
       await window.electronAPI.setActiveToken(id)
       
@@ -1176,10 +1314,6 @@ function App() {
             />
           )}
           
-          {currentPage === 'faq' && (
-            <FAQPage />
-          )}
-          
           {currentPage === 'database' && (
             <DatabaseManagePage 
               tokens={tokens}
@@ -1190,12 +1324,21 @@ function App() {
           {currentPage === 'system' && (
             <SystemManagePage updateInfo={updateInfo} />
           )}
+
+          {currentPage === 'mac' && (
+            <MacManagePage />
+          )}
+
+          {currentPage === 'docs' && (
+            <DocsPage />
+          )}
         </div>
       </div>
       
       <TokenFormModal
         show={showForm}
         token={editingToken}
+        existingTokens={tokens}
         onSave={handleSaveToken}
         onCancel={handleCancel}
         onShowDialog={showDialog}

@@ -4,6 +4,8 @@ import '../styles/TokenList.css'
 
 interface TokenListProps {
   tokens: Token[]
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
   onEdit: (token: Token) => void
   onDelete: (id: string) => void
   onSetActive: (id: string) => void
@@ -22,6 +24,8 @@ interface TokenListProps {
 
 const TokenList: React.FC<TokenListProps> = ({
   tokens,
+  selectedIds,
+  onToggleSelect,
   onEdit,
   onDelete,
   onSetActive,
@@ -30,13 +34,7 @@ const TokenList: React.FC<TokenListProps> = ({
   onShowDialog
 }) => {
   if (tokens.length === 0) {
-    return (
-      <div className="empty-state">
-        <div className="empty-state-icon">🔑</div>
-        <h2>还没有Token</h2>
-        <p>点击"添加新Token"按钮开始管理你的Cursor账号</p>
-      </div>
-    )
+    return null
   }
 
   // 获取额度显示文本
@@ -113,6 +111,7 @@ const TokenList: React.FC<TokenListProps> = ({
       <table className="token-table">
         <thead>
           <tr>
+            {onToggleSelect && <th className="col-checkbox"></th>}
             <th className="col-name">账号名称</th>
             <th className="col-plan">订阅类型</th>
             <th className="col-quota">额度</th>
@@ -125,12 +124,23 @@ const TokenList: React.FC<TokenListProps> = ({
           {tokens.map((token) => {
             const usagePercentage = getUsagePercentage(token)
             const isDropdownOpen = openDropdownId === token.id
+            const isSelected = selectedIds?.has(token.id) || false
             
             return (
               <tr
                 key={token.id}
-                className={`token-table-row ${token.isActive ? 'active' : ''} ${token.lastRefreshError ? 'refresh-failed' : ''}`}
+                className={`token-table-row ${token.isActive ? 'active' : ''} ${token.lastRefreshError ? 'refresh-failed' : ''} ${isSelected ? 'selected' : ''}`}
               >
+                {onToggleSelect && (
+                  <td className="col-checkbox">
+                    <input 
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onToggleSelect(token.id)}
+                      className="row-checkbox"
+                    />
+                  </td>
+                )}
                 <td className="col-name">
                   <div className="token-name-cell">
                     <span className="token-name-text">
@@ -308,4 +318,3 @@ const TokenList: React.FC<TokenListProps> = ({
 }
 
 export default TokenList
-

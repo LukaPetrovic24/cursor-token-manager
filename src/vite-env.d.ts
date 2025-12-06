@@ -84,5 +84,7 @@ interface Window {
     }>
     resetDatabase: (accountId?: string) => Promise<{ success: boolean; error?: string }>
     onDatabaseResetProgress: (callback: (data: { step: string; progress: number; message: string }) => void) => () => void
+    // 文档读取
+    readDocFile?: (fileName: string) => Promise<{ success: boolean; content?: string; error?: string }>
   }
 }

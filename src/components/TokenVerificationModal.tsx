@@ -444,44 +444,68 @@ user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi
     URL.revokeObjectURL(link.href)
   }
 
-  // 辅助函数：解析 Token 并提取信息
+  // 辅助函数：解析 Token 并提取信息（添加时不获取 longTermToken，切换账号时再获取）
   const parseTokenInfo = (fullToken: string) => {
     let workosId = ''
-    let longTermToken = fullToken
-    let cookieFormat = fullToken
+    let longTermToken = '' // cookie 格式时留空，切换时再获取
+    let cookieFormat = ''
     let emailFromToken = ''
     
     // 检查是否是 cookie 格式 (包含 %3A%3A 或 ::)
-    if (fullToken.includes('%3A%3A')) {
-      const parts = fullToken.split('%3A%3A')
-      workosId = parts[0] || ''
-      longTermToken = parts[1] || fullToken
-      cookieFormat = fullToken
-    } else if (fullToken.includes('::')) {
-      const parts = fullToken.split('::')
-      workosId = parts[0] || ''
-      longTermToken = parts[1] || fullToken
-      cookieFormat = `${workosId}%3A%3A${longTermToken}`
+    const isCookieFormat = fullToken.includes('%3A%3A') || fullToken.includes('::')
+    
+    if (isCookieFormat) {
+      // cookie 格式：只保存 cookie，不提取 longTermToken
+      if (fullToken.includes('%3A%3A')) {
+        const parts = fullToken.split('%3A%3A')
+        workosId = parts[0] || ''
+        cookieFormat = fullToken
+      } else if (fullToken.includes('::')) {
+        const parts = fullToken.split('::')
+        workosId = parts[0] || ''
+        const jwtPart = parts[1] || ''
+        // 统一转为 %3A%3A 格式
+        cookieFormat = `${workosId}%3A%3A${jwtPart}`
+      }
+      // longTermToken 留空，切换账号时再从 cookie 中提取
+      longTermToken = ''
+    } else {
+      // 纯 JWT 格式，保存为 longTermToken
+      longTermToken = fullToken
+      cookieFormat = '' // 留空，切换时再生成
     }
     
-    // 尝试从 JWT payload 中提取 workosId 和 email
+    // 尝试从 JWT payload 中提取 workosId 和 email（仅用于显示）
+    // 注意：cookie 格式时，我们需要临时提取 JWT 来获取 email，但不保存到 longTermToken
     try {
-      const jwtToken = longTermToken.startsWith('eyJ') ? longTermToken : fullToken
-      const jwtParts = jwtToken.split('.')
-      if (jwtParts.length === 3) {
-        const base64 = jwtParts[1].replace(/-/g, '+').replace(/_/g, '/')
-        const padded = base64 + '='.repeat((4 - base64.length % 4) % 4)
-        const payload = JSON.parse(atob(padded))
-        
-        // 提取 workosId
-        if (!workosId && payload.sub) {
-          workosId = payload.sub.split('|')[1] || payload.sub
-          cookieFormat = `${workosId}%3A%3A${longTermToken}`
+      let jwtForParsing = ''
+      if (isCookieFormat) {
+        // 临时提取 JWT 用于解析 email，但不保存
+        if (fullToken.includes('%3A%3A')) {
+          jwtForParsing = fullToken.split('%3A%3A')[1] || ''
+        } else if (fullToken.includes('::')) {
+          jwtForParsing = fullToken.split('::')[1] || ''
         }
-        
-        // 提取 email
-        if (payload.email) {
-          emailFromToken = payload.email
+      } else {
+        jwtForParsing = fullToken
+      }
+      
+      if (jwtForParsing && jwtForParsing.startsWith('eyJ')) {
+        const jwtParts = jwtForParsing.split('.')
+        if (jwtParts.length === 3) {
+          const base64 = jwtParts[1].replace(/-/g, '+').replace(/_/g, '/')
+          const padded = base64 + '='.repeat((4 - base64.length % 4) % 4)
+          const payload = JSON.parse(atob(padded))
+          
+          // 提取 workosId（仅用于标识）
+          if (!workosId && payload.sub) {
+            workosId = payload.sub.split('|')[1] || payload.sub
+          }
+          
+          // 提取 email
+          if (payload.email) {
+            emailFromToken = payload.email
+          }
         }
       }
     } catch (e) {
@@ -529,14 +553,18 @@ user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi
       )
       
       // 构建完整的 accountInfo
+      // 如果是纯 JWT 格式，cookieFormat 为空，切换账号时再转换
       const accountInfo: any = {
         email: email,
         plan: result.plan,
         subscriptionStatus: result.subscriptionStatus,
         longTermToken: longTermToken,
-        cookieFormat: cookieFormat,
+        cookieFormat: cookieFormat, // 可能为空（纯JWT时）
         id: workosId || undefined
       }
+      
+      // 保存的 token 值：优先使用 cookieFormat，如果为空则使用原始 fullToken
+      const tokenToSave = cookieFormat || result.fullToken!
       
       // 添加过期时间
       if (result.expiryDate) {
@@ -573,7 +601,7 @@ user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi
         saveResult = await window.electronAPI.saveToken({
           id: existingToken.id,
           name: email,
-          token: cookieFormat,
+          token: tokenToSave,
           isActive: existingToken.isActive,
           accountInfo: accountInfo,
           usage: usageData,
@@ -596,7 +624,7 @@ user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi
         saveResult = await window.electronAPI.saveToken({
           id: `token_${Date.now()}`,
           name: email,
-          token: cookieFormat,
+          token: tokenToSave,
           isActive: false,
           accountInfo: accountInfo,
           usage: usageData,
@@ -666,14 +694,18 @@ user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi
           )
           
           // 构建 accountInfo
+          // 如果是纯 JWT 格式，cookieFormat 为空，切换账号时再转换
           const accountInfo: any = {
             email: email,
             plan: result.plan,
             subscriptionStatus: result.subscriptionStatus,
             longTermToken: longTermToken,
-            cookieFormat: cookieFormat,
+            cookieFormat: cookieFormat, // 可能为空（纯JWT时）
             id: workosId || undefined
           }
+          
+          // 保存的 token 值：优先使用 cookieFormat，如果为空则使用原始 fullToken
+          const tokenToSave = cookieFormat || result.fullToken!
           
           if (result.expiryDate) {
             accountInfo.trialExpiryDate = result.expiryDate
@@ -707,7 +739,7 @@ user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi
             saveResult = await window.electronAPI.saveToken({
               id: existingToken.id,
               name: email,
-              token: cookieFormat,
+              token: tokenToSave,
               isActive: existingToken.isActive,
               accountInfo: accountInfo,
               usage: usageData,
@@ -720,7 +752,7 @@ user_01KBG1M6T4YYCHH7T4FKPYMQ0C::eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi
             saveResult = await window.electronAPI.saveToken({
               id: `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               name: email,
-              token: cookieFormat,
+              token: tokenToSave,
               isActive: false,
               accountInfo: accountInfo,
               usage: usageData,

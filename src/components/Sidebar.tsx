@@ -1,15 +1,18 @@
 import '../styles/Sidebar.css'
 import packageJson from '../../package.json'
 import { useState, useEffect } from 'react'
+import UpdateModal from './UpdateModal'
 
 interface SidebarProps {
-  currentPage: 'home' | 'accounts' | 'settings' | 'faq' | 'system' | 'database'
-  onPageChange: (page: 'home' | 'accounts' | 'settings' | 'faq' | 'system' | 'database') => void
+  currentPage: 'home' | 'accounts' | 'settings' | 'system' | 'database' | 'mac' | 'docs'
+  onPageChange: (page: 'home' | 'accounts' | 'settings' | 'system' | 'database' | 'mac' | 'docs') => void
   tokensCount?: number
   updateInfo?: {
     hasUpdate: boolean
+    currentVersion?: string
     latestVersion?: string
     releaseUrl?: string
+    releaseNotes?: string
     manualDownload?: boolean
   }
 }
@@ -19,6 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
   const [isDownloaded, setIsDownloaded] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState<number>(0)
   const [error, setError] = useState<string>('')
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
 
   useEffect(() => {
     if (!window.electronAPI) return
@@ -57,37 +61,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
     }
   }, [])
 
-  const handleUpdateClick = async () => {
-    console.log('点击更新，当前状态:', { isDownloading, isDownloaded, manualDownload: updateInfo?.manualDownload })
-    
-    // 如果已下载，直接安装
-    if (isDownloaded) {
-      console.log('执行安装...')
-      try {
-        await window.electronAPI.installUpdate()
-      } catch (err) {
-        console.error('安装失败:', err)
-        setError('安装失败')
-        setTimeout(() => setError(''), 3000)
-      }
-      return
-    }
+  // 点击侧边栏更新提示 - 打开更新弹窗
+  const handleUpdateClick = () => {
+    setShowUpdateModal(true)
+  }
 
-    // 如果正在下载，忽略点击
-    if (isDownloading) {
-      console.log('正在下载中，忽略点击')
-      return
-    }
-
-    // 如果是手动下载模式或开发环境，打开浏览器
-    if (updateInfo?.manualDownload && updateInfo?.releaseUrl) {
-      console.log('手动下载模式，打开浏览器:', updateInfo.releaseUrl)
-      window.open(updateInfo.releaseUrl, '_blank')
-      return
-    }
-
-    // 自动下载模式
-    console.log('开始自动下载...')
+  // 在弹窗中点击下载
+  const handleDownload = async () => {
+    console.log('开始下载更新...')
     setIsDownloading(true)
     setError('')
     
@@ -98,29 +79,30 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
       if (!result.success) {
         console.error('下载失败:', result.error)
         setIsDownloading(false)
-        setError('下载失败')
-        
-        // 3秒后清除错误并回退到手动下载
-        setTimeout(() => {
-          setError('')
-          // 如果失败，打开手动下载
-          if (updateInfo?.releaseUrl) {
-            window.open(updateInfo.releaseUrl, '_blank')
-          }
-        }, 3000)
+        setError('下载失败，请稍后重试')
       }
     } catch (err: any) {
       console.error('下载异常:', err)
       setIsDownloading(false)
-      setError('下载异常')
-      
-      // 3秒后打开手动下载
-      setTimeout(() => {
-        setError('')
-        if (updateInfo?.releaseUrl) {
-          window.open(updateInfo.releaseUrl, '_blank')
-        }
-      }, 3000)
+      setError('下载异常，请稍后重试')
+    }
+  }
+
+  // 在弹窗中点击安装
+  const handleInstall = async () => {
+    console.log('执行安装...')
+    try {
+      await window.electronAPI.installUpdate()
+    } catch (err) {
+      console.error('安装失败:', err)
+      setError('安装失败')
+    }
+  }
+
+  // 打开发布页面
+  const handleOpenUrl = () => {
+    if (updateInfo?.releaseUrl) {
+      window.open(updateInfo.releaseUrl, '_blank')
     }
   }
   const version = `v${packageJson.version}`
@@ -158,14 +140,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
           </button>
 
           <button
-            className={`nav-item ${currentPage === 'faq' ? 'active' : ''}`}
-            onClick={() => onPageChange('faq')}
-          >
-            <span className="nav-icon">❓</span>
-            <span className="nav-label">常见问题</span>
-          </button>
-
-          <button
             className={`nav-item ${currentPage === 'settings' ? 'active' : ''}`}
             onClick={() => onPageChange('settings')}
           >
@@ -188,6 +162,23 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
             <span className="nav-icon">🔧</span>
             <span className="nav-label">系统管理</span>
           </button>
+
+          <button
+            className={`nav-item ${currentPage === 'mac' ? 'active' : ''}`}
+            onClick={() => onPageChange('mac')}
+          >
+            <span className="nav-icon">🍎</span>
+            <span className="nav-label">Mac管理</span>
+            <span className="nav-badge-wip">待完成</span>
+          </button>
+
+          <button
+            className={`nav-item ${currentPage === 'docs' ? 'active' : ''}`}
+            onClick={() => onPageChange('docs')}
+          >
+            <span className="nav-icon">📖</span>
+            <span className="nav-label">文档</span>
+          </button>
         </div>
 
         <div className="nav-footer">
@@ -196,23 +187,17 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
               className="sidebar-update-notice" 
               onClick={handleUpdateClick}
               style={{ 
-                cursor: isDownloading && !error ? 'wait' : 'pointer',
-                opacity: isDownloading && !error ? 0.8 : 1
+                cursor: 'pointer',
+                opacity: 1
               }}
-              title={
-                error ? error :
-                isDownloaded ? '点击安装更新并重启' :
-                isDownloading ? `下载中... ${downloadProgress.toFixed(0)}%` :
-                updateInfo?.manualDownload ? '点击前往下载页面' :
-                '点击立即下载更新'
-              }
+              title="点击查看更新详情"
             >
-              {error ? (
+              {isDownloaded ? (
                 <>
-                  <div className="update-icon">❌</div>
+                  <div className="update-icon">✅</div>
                   <div className="update-content">
-                    <div className="update-title" style={{ fontSize: '12px' }}>{error}</div>
-                    <div className="update-version" style={{ fontSize: '11px' }}>点击重试</div>
+                    <div className="update-title">点击安装</div>
+                    <div className="update-version">{updateInfo.latestVersion}</div>
                   </div>
                 </>
               ) : isDownloading ? (
@@ -221,14 +206,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
                   <div className="update-content">
                     <div className="update-title">下载中...</div>
                     <div className="update-version">{downloadProgress.toFixed(0)}%</div>
-                  </div>
-                </>
-              ) : isDownloaded ? (
-                <>
-                  <div className="update-icon">✅</div>
-                  <div className="update-content">
-                    <div className="update-title">点击安装</div>
-                    <div className="update-version">{updateInfo.latestVersion}</div>
                   </div>
                 </>
               ) : (
@@ -246,6 +223,24 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, tokensCoun
           )}
         </div>
       </nav>
+
+      {/* 更新详情弹窗 */}
+      <UpdateModal
+        show={showUpdateModal}
+        currentVersion={updateInfo?.currentVersion || version}
+        latestVersion={updateInfo?.latestVersion}
+        releaseNotes={updateInfo?.releaseNotes}
+        releaseUrl={updateInfo?.releaseUrl}
+        manualDownload={updateInfo?.manualDownload}
+        isDownloading={isDownloading}
+        isDownloaded={isDownloaded}
+        downloadProgress={downloadProgress}
+        error={error}
+        onClose={() => setShowUpdateModal(false)}
+        onDownload={handleDownload}
+        onInstall={handleInstall}
+        onOpenUrl={handleOpenUrl}
+      />
     </div>
   )
 }
