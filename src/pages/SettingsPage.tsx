@@ -33,16 +33,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     foundCount?: number
   } | null>(null)
   
-  const [toolStatus, setToolStatus] = useState<{
-    isProcessing: boolean
-    message: string
-    type: 'success' | 'error' | 'info' | null
-  }>({
-    isProcessing: false,
-    message: '',
-    type: null
-  })
-
   useEffect(() => {
     setCursorAppPath(settings.cursorAppPath || '')
     setBatchRefreshSize(settings.batchRefreshSize || 5)
@@ -122,102 +112,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       }
     } catch (e) {
       console.error('手动选择 Cursor 程序路径失败:', e)
-    }
-  }
-
-  const handleResetMachineId = async () => {
-    if (!window.electronAPI) return
-    
-    setToolStatus({
-      isProcessing: true,
-      message: '正在重置机器码（包括 main.js 补丁）...',
-      type: 'info'
-    })
-    
-    try {
-      const result = await window.electronAPI.resetMachineId()
-      
-      if (result.success) {
-        setToolStatus({
-          isProcessing: false,
-          message: '✓ 机器码已重置！storage.json 已更新，main.js 已打补丁（如找到），请重启 Cursor 生效。',
-          type: 'success'
-        })
-      } else {
-        setToolStatus({
-          isProcessing: false,
-          message: `✗ 重置失败：${result.error || '未知错误'}`,
-          type: 'error'
-        })
-      }
-      
-      setTimeout(() => {
-        setToolStatus({ isProcessing: false, message: '', type: null })
-      }, 5000)
-    } catch (error: any) {
-      setToolStatus({
-        isProcessing: false,
-        message: `✗ 操作失败：${error.message || '未知错误'}`,
-        type: 'error'
-      })
-      
-      setTimeout(() => {
-        setToolStatus({ isProcessing: false, message: '', type: null })
-      }, 5000)
-    }
-  }
-
-  const handleClearHistory = async () => {
-    if (!window.electronAPI) return
-    
-    const confirmed = window.confirm(
-      '⚠️ 警告：此操作将清除所有历史记录和工作区存储，并删除 Cursor 数据库。\n\n' +
-      '这将会：\n' +
-      '1. 清除所有聊天历史\n' +
-      '2. 清除工作区存储\n' +
-      '3. 删除 state.vscdb 数据库\n' +
-      '4. 自动关闭 Cursor 进程\n\n' +
-      '是否继续？'
-    )
-    
-    if (!confirmed) return
-    
-    setToolStatus({
-      isProcessing: true,
-      message: '正在清理历史会话...',
-      type: 'info'
-    })
-    
-    try {
-      const result = await window.electronAPI.clearHistory()
-      
-      if (result.success) {
-        setToolStatus({
-          isProcessing: false,
-          message: '✓ 历史会话已清除！Cursor 已关闭，请重新启动。',
-          type: 'success'
-        })
-      } else {
-        setToolStatus({
-          isProcessing: false,
-          message: `✗ 清理失败：${result.error || '未知错误'}`,
-          type: 'error'
-        })
-      }
-      
-      setTimeout(() => {
-        setToolStatus({ isProcessing: false, message: '', type: null })
-      }, 5000)
-    } catch (error: any) {
-      setToolStatus({
-        isProcessing: false,
-        message: `✗ 操作失败：${error.message || '未知错误'}`,
-        type: 'error'
-      })
-      
-      setTimeout(() => {
-        setToolStatus({ isProcessing: false, message: '', type: null })
-      }, 5000)
     }
   }
 
@@ -371,51 +265,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   </span>
                 </label>
               </div>
-            </div>
-          </div>
-
-          {/* 高级工具 */}
-          <div className="settings-section">
-            <h3 className="section-title">高级工具</h3>
-            <p className="section-desc">以下操作会直接修改 Cursor 配置，请谨慎使用。</p>
-            
-            <div className="tools-grid">
-              <button
-                type="button"
-                className="tool-btn"
-                onClick={handleResetMachineId}
-                disabled={toolStatus.isProcessing}
-              >
-                🔄 重置机器码
-              </button>
-              
-              <button
-                type="button"
-                className="tool-btn danger"
-                onClick={handleClearHistory}
-                disabled={toolStatus.isProcessing}
-              >
-                🗑️ 清理历史会话
-              </button>
-            </div>
-            
-            {toolStatus.message && (
-              <div className={`tool-status ${toolStatus.type}`}>
-                {toolStatus.message}
-              </div>
-            )}
-            
-            <div className="tools-info">
-              <p><strong>🔄 重置机器码：</strong>从根源重置你的"数字身份"</p>
-              <p className="tool-detail">• 修改 storage.json 中的设备标识（machineId、devDeviceId、sqmId）</p>
-              <p className="tool-detail">• 对 main.js 打补丁，防止启动时从真实硬件读取信息</p>
-              <p className="tool-detail">• 自动备份原始 main.js 文件（.backup）</p>
-              
-              <p style={{ marginTop: '16px' }}><strong>🗑️ 清理历史会话：</strong>安全高效的无痕清理</p>
-              <p className="tool-detail">• 清空 History 和 workspaceStorage 目录</p>
-              <p className="tool-detail">• 删除 state.vscdb 数据库及其备份</p>
-              <p className="tool-detail">• 自动关闭 Cursor 进程，清理后需重启</p>
-              <p className="tool-detail">• 不会删除个人设置和扩展</p>
             </div>
           </div>
 
